@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Spring WebApp Review</title>
+<link rel="stylesheet"
+	href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<style>
+keyword {
+	background-color: yellow;
+	color: black;
+}
+</style>
+</head>
+<body>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+	<script>
+		$(document).ready(function(){
+			$("#buttonUpdate").hide();		
+		});
+		
+		function searchId(id) {
+			if(id == null){
+				id = $("#searchReviewId").val()				
+			}
+			$.get("/reviews/" + id, function(data,status) {
+					$('#showReview').html("<tr><td id='reviewId'>"
+											+ data.reviewId
+											+ "</td><td><textarea id='reviewText' rows='20' cols='150'>"
+											+ data.review
+											+ "</textarea></td><tr>");
+					$("#buttonUpdate").show();
+				}
+			).fail(function() {
+				$('#showReview').html("FAIL");
+			});
+		}
+		
+		function searchText() {
+			$('#showReview').html("PROCESSING");
+			$.get("/reviews", { "query" : $("#searchText").val() }, 
+					function(data,status) {
+						if(!$.trim(data)) {
+							$('#showReview').html("not match");
+						}else {
+							let str = "";
+							data.forEach(function(entry) {
+								str += "<tr><td>" + entry.reviewId + "</td><td>"
+										+ entry.review + "</td><td><input type='button' onclick='searchId("+entry.reviewId+")' id='bth-search-id' value='edit' /></td><tr>";
+							});
+							$('#showReview').html(str);
+							$("#buttonUpdate").hide();
+						}
+					}
+			).fail(function() {
+				$('#showReview').html("FAIL");
+			});
+		}
+		
+		function updateReview() {
+			let text = $("#reviewText").val();
+			let id = $("#reviewId").text();
+		 	$.ajax({
+				type : "PUT",
+				contentType : "application/json;charset=UTF-8",
+				url : "/reviews/"+ id,
+				data : JSON.stringify({
+					"review": text
+				}),
+				dataType : 'json',
+				success : function(data) {
+					alert('success');
+				},
+				error : function(e) {
+					alert('fail');
+				}
+			}); 
+		}
+	</script>
+	<div class="container">
+		<h1>Review</h1>
+		<div>
+			reviewId :: <input type="text" id="searchReviewId" />
+			</td> <input type="button" onclick="searchId()" id="bth-search-id"
+					value="search" />
+		</div>
+		<div>
+			keyword :: <input type="text" id="searchText" />
+			</td> <input type="button" onclick="searchText()" id="bth-search-text"
+					value="search" />
+		</div>
+		<table clase="table">
+			<thead>
+				<tr>
+					<th>ReviewId</th>
+					<th>Review</th>
+				</tr>
+			</thead>
+			<tbody id="showReview">
+			</tbody>
+		</table>
+		<div id="buttonUpdate">
+			<input class="float-right" type="button" onclick="updateReview()" 
+				id="bth-update" value="update" />
+		</div>
+	</div>
+</body>
+</html>
